@@ -6,7 +6,7 @@ on:
       - main
 
 permissions:
-  contents: write   # allow push to repo
+  contents: write   # 👈 give Actions permission to push
 
 jobs:
   sync:
@@ -17,6 +17,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}   # 👈 ensures push is authenticated
 
       - name: Configure Git
         run: |
