@@ -3,7 +3,10 @@ name: Sync main to dev
 on:
   push:
     branches:
-      - main   # run this workflow whenever main branch is updated
+      - main
+
+permissions:
+  contents: write   # allow push to repo
 
 jobs:
   sync:
@@ -12,6 +15,7 @@ jobs:
       - name: Checkout main
         uses: actions/checkout@v3
         with:
+          fetch-depth: 0
           ref: main
 
       - name: Configure Git
@@ -22,6 +26,6 @@ jobs:
       - name: Merge main into dev
         run: |
           git fetch origin dev
-          git checkout dev
-          git merge origin/main --no-edit || true
+          git checkout -b dev origin/dev
+          git merge main --no-edit --allow-unrelated-histories
           git push origin dev
