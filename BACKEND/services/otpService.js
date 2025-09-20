@@ -56,15 +56,36 @@ await redisClient.setEx(
   (parseInt(attempts) + 1).toString()
 );
 
-      // Send SMS (only if Twilio is configured and in production or if explicitly enabled)
-      if (twilioClient && (process.env.NODE_ENV === 'production' || process.env.ENABLE_SMS === 'true')) {
-        await twilioClient.messages.create({
-          body: `Your OTP for MVP Auth is: ${otp}. Valid for ${process.env.OTP_EXPIRY_MINUTES} minutes.`,
-          from: process.env.TWILIO_PHONE_NUMBER,
-          to: `+91${mobileNumber}` // Assuming Indian numbers
-        });
+      // Send SMS (only in production or if explicitly enabled)
+      if (process.env.NODE_ENV === 'production' || process.env.ENABLE_SMS === 'true') {
+        console.log(`Attempting to send SMS to: +91${mobileNumber}`);
+        console.log(`Using Twilio Phone: ${process.env.TWILIO_PHONE_NUMBER}`);
+        
+        try {
+          const message = await twilioClient.messages.create({
+            body: `Your OTP for MVP Auth is: ${otp}. Valid for ${process.env.OTP_EXPIRY_MINUTES} minutes.`,
+            from: process.env.TWILIO_PHONE_NUMBER,
+            to: `+91${mobileNumber}` // Assuming Indian numbers
+          });
+          
+          console.log(`SMS sent successfully. Message SID: ${message.sid}`);
+        } catch (smsError) {
+          console.error('Twilio SMS Error:', {
+            error: smsError.message,
+            code: smsError.code,
+            status: smsError.status,
+            moreInfo: smsError.moreInfo
+          });
+          
+          // Don't throw error for SMS failure in development
+          if (process.env.NODE_ENV === 'production') {
+            throw new Error(`SMS sending failed: ${smsError.message}`);
+          } else {
+            console.log('SMS failed but continuing in development mode...');
+          }
+        }
       } else {
-        console.log(`📱 SMS disabled. OTP for ${mobileNumber}: ${otp}`);
+        console.log('SMS sending disabled. Set ENABLE_SMS=true to enable SMS in development.');
       }
 
       // In development, return OTP for testing
