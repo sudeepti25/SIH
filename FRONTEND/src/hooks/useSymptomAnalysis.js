@@ -20,11 +20,7 @@ export const useSymptomAnalysis = () => {
    * @returns {Promise<Object|null>} Analysis result or null if failed
    */
   const analyzeSymptoms = useCallback(async (symptomData) => {
-    if (!isAuthenticated) {
-      setAnalysisError('Please log in to use the symptom checker.');
-      return null;
-    }
-
+    // Note: Symptom analysis is available without authentication
     setIsAnalyzing(true);
     setAnalysisError(null);
 
@@ -32,7 +28,7 @@ export const useSymptomAnalysis = () => {
       const result = await symptomAPI.analyzeSymptoms(symptomData);
       setAnalysisResult(result);
       
-      // Add to history
+      // Add to history (local storage for unauthenticated users)
       setAnalysisHistory(prev => [
         {
           id: result.data?.analysisId || Date.now(),
@@ -62,7 +58,7 @@ export const useSymptomAnalysis = () => {
     } finally {
       setIsAnalyzing(false);
     }
-  }, [isAuthenticated, updateTokens]);
+  }, []);
 
   /**
    * Validate symptom data before analysis
@@ -70,11 +66,7 @@ export const useSymptomAnalysis = () => {
    * @returns {Promise<boolean>} True if valid
    */
   const validateSymptoms = useCallback(async (symptomData) => {
-    if (!isAuthenticated) {
-      setAnalysisError('Please log in to validate symptoms.');
-      return false;
-    }
-
+    // Note: Symptom validation is available without authentication
     try {
       await symptomAPI.validateSymptoms(symptomData);
       return true;
@@ -86,7 +78,7 @@ export const useSymptomAnalysis = () => {
       }
       return false;
     }
-  }, [isAuthenticated]);
+  }, []);
 
   /**
    * Get list of available symptoms

@@ -74,24 +74,46 @@ app.use(errorHandler);
 
 // Database connection and server startup
 const startServer = async () => {
+  let dbConnected = false;
+  let redisConnected = false;
+
   try {
-    // Connect to Redis
-    await redisClient.connect();
-    console.log('✅ Connected to Redis');
+    // Try to connect to Redis (non-blocking)
+    try {
+      await redisClient.connect();
+      console.log('✅ Connected to Redis');
+      redisConnected = true;
+    } catch (redisError) {
+      console.warn('⚠️  Redis connection failed:', redisError.message);
+      console.warn('⚠️  Some features may not work (OTP, caching)');
+    }
 
-    // Test database connection
-    await sequelize.authenticate();
-    console.log('✅ Connected to PostgreSQL database');
+    // Try to connect to database (non-blocking)
+    try {
+      await sequelize.authenticate();
+      console.log('✅ Connected to PostgreSQL database');
+      
+      // Sync database models (create tables)
+      await sequelize.sync({ alter: process.env.NODE_ENV === 'development' });
+      console.log('✅ Database models synchronized');
+      dbConnected = true;
+    } catch (dbError) {
+      console.warn('⚠️  Database connection failed:', dbError.message);
+      console.warn('⚠️  Some features may not work (authentication, history)');
+    }
 
-    // Sync database models (create tables)
-    await sequelize.sync({ alter: process.env.NODE_ENV === 'development' });
-    console.log('✅ Database models synchronized');
-
-    // Start server
+    // Start server regardless of database/Redis status
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📱 Environment: ${process.env.NODE_ENV}`);
       console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
+      console.log(`💡 Symptom Checker: Available (public endpoint)`);
+      if (!dbConnected) {
+        console.log(`⚠️  Authentication: Disabled (database not connected)`);
+      }
+      if (!redisConnected) {
+        console.log(`⚠️  OTP/Caching: Disabled (Redis not connected)`);
+      }
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);

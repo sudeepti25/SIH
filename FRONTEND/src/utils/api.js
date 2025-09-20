@@ -62,6 +62,30 @@ const apiRequest = async (endpoint, options = {}) => {
   }
 };
 
+/**
+ * Generic API request function for public endpoints (no authentication required)
+ * @param {string} endpoint - API endpoint path
+ * @param {Object} options - Request options
+ * @returns {Promise<Object>} API response data
+ */
+const publicApiRequest = async (endpoint, options = {}) => {
+  const config = {
+    headers: createHeaders(), // No token
+    ...options,
+  };
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    return await handleResponse(response);
+  } catch (error) {
+    // Network error or other issues
+    if (!error.status) {
+      error.message = 'Network error. Please check your connection.';
+    }
+    throw error;
+  }
+};
+
 // Authentication API calls
 export const authAPI = {
   /**
@@ -139,40 +163,40 @@ export const authAPI = {
 // Symptom analysis API calls
 export const symptomAPI = {
   /**
-   * Analyze symptoms using AI
+   * Analyze symptoms using AI (Public endpoint - no authentication required)
    * @param {Object} symptomData - Symptom analysis data
    * @param {Array} symptomData.symptoms - Array of symptoms with severity and duration
    * @param {Object} symptomData.patientInfo - Patient information (optional)
    * @returns {Promise<Object>} AI analysis results
    */
   analyzeSymptoms: (symptomData) =>
-    apiRequest('/symptoms/analyze', {
+    publicApiRequest('/symptoms/analyze', {
       method: 'POST',
       body: JSON.stringify(symptomData),
     }),
 
   /**
-   * Get list of available symptoms
+   * Get list of available symptoms (Public endpoint)
    * @returns {Promise<Object>} List of symptoms and categories
    */
   getSymptomsList: () =>
-    apiRequest('/symptoms/list', {
+    publicApiRequest('/symptoms/list', {
       method: 'GET',
     }),
 
   /**
-   * Validate symptom data before analysis
+   * Validate symptom data before analysis (Public endpoint)
    * @param {Object} symptomData - Symptom data to validate
    * @returns {Promise<Object>} Validation results
    */
   validateSymptoms: (symptomData) =>
-    apiRequest('/symptoms/validate', {
+    publicApiRequest('/symptoms/validate', {
       method: 'POST',
       body: JSON.stringify(symptomData),
     }),
 
   /**
-   * Get user's symptom analysis history
+   * Get user's symptom analysis history (Requires authentication)
    * @param {number} limit - Number of results to return
    * @param {number} offset - Offset for pagination
    * @returns {Promise<Object>} Analysis history
