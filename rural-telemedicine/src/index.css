@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans+Gurmukhi:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-sterile-50 text-sterile-900;
+  }
+  
+  * {
+    @apply box-border;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+  
+  .btn-secondary {
+    @apply bg-white hover:bg-sterile-50 text-primary-600 font-medium py-3 px-6 rounded-lg border border-primary-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+  
+  .btn-medical {
+    @apply bg-medical-600 hover:bg-medical-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-medical-500 focus:ring-offset-2;
+  }
+  
+  .btn-emergency {
+    @apply bg-emergency-600 hover:bg-emergency-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-emergency-500 focus:ring-offset-2;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-sterile-200 p-6;
+  }
+  
+  .card-medical {
+    @apply bg-white rounded-xl shadow-sm border border-medical-200 p-6;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 border border-sterile-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors duration-200;
+  }
+  
+  .medical-gradient {
+    @apply bg-gradient-to-r from-primary-500 to-medical-500;
+  }
+  
+  .emergency-gradient {
+    @apply bg-gradient-to-r from-emergency-500 to-healthcare-500;
+  }
+}
