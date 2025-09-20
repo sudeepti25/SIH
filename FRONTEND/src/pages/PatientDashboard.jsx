@@ -127,12 +127,12 @@ export default function PatientDashboard() {
               <p className="text-sm text-blue-700">Enter the call ID provided by your doctor</p>
             </div>
             <button
-              onClick={() => handleJoinVideoCall()}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center space-x-2 transition-colors"
-            >
-              <Video className="h-4 w-4" />
-              <span>Join Call</span>
-            </button>
+  onClick={() => window.open('https://knowsyash.github.io/webrtc_testing/', '_blank')}
+  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center space-x-2 transition-colors"
+>
+  <Video className="h-4 w-4" />
+  <span>Join Call</span>
+</button>
           </div>
         </div>
 
@@ -165,13 +165,13 @@ export default function PatientDashboard() {
                 </div>
                 <div className="flex flex-col space-y-2">
                   {appointment.type === 'video' && appointment.status === 'confirmed' && (
-                    <button
-                      onClick={() => handleJoinCall(appointment)}
-                      className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded-lg flex items-center space-x-1 text-sm transition-colors"
-                    >
-                      <Video className="h-4 w-4" />
-                      <span>Join Call</span>
-                    </button>
+                   <button
+  onClick={() => window.open('https://knowsyash.github.io/webrtc_testing/', '_blank')}
+  className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded-lg flex items-center space-x-1 text-sm transition-colors"
+>
+  <Video className="h-4 w-4" />
+  <span>Join Call</span>
+</button>
                   )}
                   <button className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-3 rounded-lg text-sm transition-colors">
                     View Details

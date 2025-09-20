@@ -469,13 +469,13 @@ const DoctorDashboard = () => {
               
               <div className="flex flex-col space-y-2">
                 <button 
-                  onClick={() => handleStartConsultation(patient)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center space-x-2 transition-colors text-sm"
-                  disabled={!isOnline}
-                >
-                  <Video className="h-4 w-4" />
-                  <span>Start Call</span>
-                </button>
+  onClick={() => window.open('https://knowsyash.github.io/webrtc_testing/', '_blank')}
+  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center space-x-2 transition-colors text-sm"
+  disabled={!isOnline}
+>
+  <Video className="h-4 w-4" />
+  <span>Start Call</span>
+</button>
                 <button className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg flex items-center space-x-2 transition-colors text-sm">
                   <Phone className="h-4 w-4" />
                   <span>Phone</span>
