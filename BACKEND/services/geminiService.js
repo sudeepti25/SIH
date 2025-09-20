@@ -1,17 +1,26 @@
-import { getGeminiModel } from '../config/gemini.js';
+import { getGeminiModel, isGeminiAvailable } from '../config/gemini.js';
 
 class GeminiService {
   constructor() {
     this.model = null;
+    this.isAvailable = false;
     this.initializeModel();
   }
 
   async initializeModel() {
     try {
+      if (!isGeminiAvailable()) {
+        console.warn('⚠️  Gemini AI is not available. Using mock responses for development.');
+        this.isAvailable = false;
+        return;
+      }
+      
       this.model = getGeminiModel();
+      this.isAvailable = true;
+      console.log('✅ Gemini model initialized successfully');
     } catch (error) {
       console.error('Failed to initialize Gemini model:', error.message);
-      throw error;
+      this.isAvailable = false;
     }
   }
 
@@ -22,8 +31,17 @@ class GeminiService {
    */
   async analyzeSymptoms(symptoms) {
     try {
+      // If Gemini is not available, return mock data for development
+      if (!this.isAvailable) {
+        console.warn('⚠️  Using mock symptom analysis response (Gemini API not configured)');
+        return this.getMockAnalysisResponse(symptoms);
+      }
+
       if (!this.model) {
         await this.initializeModel();
+        if (!this.isAvailable) {
+          return this.getMockAnalysisResponse(symptoms);
+        }
       }
 
       // Construct the prompt for Gemini
@@ -44,7 +62,9 @@ class GeminiService {
 
     } catch (error) {
       console.error('Error analyzing symptoms with Gemini:', error);
-      throw new Error(`Symptom analysis failed: ${error.message}`);
+      // Fallback to mock response if Gemini fails
+      console.warn('⚠️  Falling back to mock response due to Gemini error');
+      return this.getMockAnalysisResponse(symptoms);
     }
   }
 
@@ -206,6 +226,62 @@ Respond with JSON:
         reason: 'Unable to assess - please consult healthcare provider immediately'
       };
     }
+  }
+
+  /**
+   * Generate mock analysis response for development when Gemini is not available
+   * @param {Array} symptoms - Array of symptom objects
+   * @returns {Object} Mock analysis result
+   */
+  getMockAnalysisResponse(symptoms) {
+    const symptomNames = symptoms.map(s => s.name).join(', ');
+    const avgSeverity = symptoms.reduce((sum, s) => sum + s.severity, 0) / symptoms.length;
+    
+    return {
+      success: true,
+      data: {
+        disease: {
+          name: "General Medical Consultation Recommended",
+          description: `Based on the reported symptoms (${symptomNames}), a medical evaluation is recommended for proper diagnosis.`,
+          probability: "Moderate"
+        },
+        severity: {
+          level: Math.round(avgSeverity),
+          description: avgSeverity >= 7 ? "High" : avgSeverity >= 4 ? "Moderate" : "Mild",
+          urgency: avgSeverity >= 7 ? "High" : avgSeverity >= 4 ? "Medium" : "Low"
+        },
+        medications: [
+          {
+            name: "Consultation Required",
+            type: "Professional Medical Advice",
+            purpose: "Proper medical evaluation needed for medication recommendations",
+            dosage: "As prescribed by healthcare provider",
+            notes: "This is a mock response. Please consult a healthcare professional for actual medication advice."
+          }
+        ],
+        recommendations: [
+          "Consult with a healthcare professional for proper diagnosis",
+          "Monitor your symptoms and seek immediate care if they worsen",
+          "Stay hydrated and get adequate rest",
+          "Keep a symptom diary to share with your doctor"
+        ],
+        redFlags: [
+          "Sudden worsening of symptoms",
+          "Difficulty breathing or chest pain",
+          "High fever (above 103°F/39.4°C)",
+          "Severe pain or discomfort"
+        ],
+        emergency: {
+          isEmergency: avgSeverity >= 8,
+          urgencyLevel: avgSeverity >= 8 ? "High" : avgSeverity >= 6 ? "Medium" : "Low",
+          timeframe: avgSeverity >= 8 ? "Seek immediate care" : "Within 24-48 hours",
+          reason: avgSeverity >= 8 ? "High severity symptoms require immediate evaluation" : "Medical consultation recommended"
+        },
+        analysisId: `mock_analysis_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: new Date().toISOString(),
+        disclaimer: "⚠️ DEVELOPMENT MODE: This is a mock response generated for testing purposes. The actual Gemini AI analysis requires a valid API key. Please consult with a qualified healthcare provider for real medical advice."
+      }
+    };
   }
 }
 
