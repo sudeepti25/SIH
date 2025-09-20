@@ -1,441 +1,598 @@
-import React, { useState } from 'react';
-import { useUser } from '../contexts/UserContext';
-import NotificationSystem from '../components/NotificationSystem';
+import React, { useState, useEffect } from 'react';
 import { 
-  BarChart3, 
-  Users, 
-  Activity, 
-  MapPin, 
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  Stethoscope,
   Pill,
-  FileText,
-  Globe,
-  Phone,
-  Heart,
-  LogOut
+  MapPin,
+  Building2,
+  CheckCircle,
+  XCircle,
+  Send,
+  Clock,
+  AlertTriangle,
+  Navigation,
+  Star,
+  LogOut,
+  RefreshCw,
+  CheckCircle2,
+  Package,
+  User,
+  FileText
 } from 'lucide-react';
 
-const AdminDashboard = () => {
-  const { user, logout } = useUser();
-  const [activeTab, setActiveTab] = useState('overview');
+const PrescriptionManagementDashboard = () => {
+  const [incomingPrescriptions, setIncomingPrescriptions] = useState([]);
+  const [selectedPrescription, setSelectedPrescription] = useState(null);
+  const [pharmacyAllocations, setPharmacyAllocations] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const systemStats = {
-    totalUsers: 1250,
-    activeUsers: 890,
-    consultationsToday: 45,
-    prescriptionsIssued: 32,
-    villagesCovered: 15,
-    satisfactionRate: 94.5,
-    totalRevenue: 45600,
-    newRegistrations: 23,
-    emergencyCalls: 3,
-    systemAlerts: 1
-  };
-
-  const diseaseTrends = [
-    { name: 'Common Cold', cases: 45, trend: 'up', percentage: 12 },
-    { name: 'Fever', cases: 38, trend: 'down', percentage: -8 },
-    { name: 'Chest Pain', cases: 25, trend: 'up', percentage: 15 },
-    { name: 'Stomach Ache', cases: 22, trend: 'stable', percentage: 0 },
-    { name: 'Headache', cases: 18, trend: 'up', percentage: 5 }
-  ];
-
-  const villageData = [
-    { name: 'Nabha', consultations: 120, population: 15000, satisfaction: 96 },
-    { name: 'Kotla', consultations: 85, population: 12000, satisfaction: 92 },
-    { name: 'Bhadson', consultations: 65, population: 8000, satisfaction: 94 },
-    { name: 'Dudhansadhan', consultations: 45, population: 6000, satisfaction: 89 },
-    { name: 'Rampur', consultations: 35, population: 5000, satisfaction: 91 }
-  ];
-
-  const recentActivities = [
+  // Extended mock data for incoming prescriptions
+  const mockIncomingPrescriptions = [
     {
-      id: 1,
-      type: 'consultation',
-      description: 'New consultation completed in Nabha',
-      time: '2 minutes ago',
-      icon: <Stethoscope className="h-4 w-4" />
+      id: 'RX001',
+      patientName: 'Ram Singh',
+      patientLocation: { lat: 30.2649, lng: 76.0844, address: 'Village Nabha, Punjab' },
+      doctorName: 'Dr. Sharma',
+      consultationTime: '10:30 AM',
+      status: 'pending',
+      urgency: 'medium',
+      medicines: [
+        { name: 'Paracetamol 500mg', dosage: '1 tablet twice daily', quantity: 10 },
+        { name: 'Cetirizine 10mg', dosage: '1 tablet at night', quantity: 7 },
+        { name: 'Vitamin C tablets', dosage: '1 tablet daily', quantity: 15 }
+      ]
     },
     {
-      id: 2,
-      type: 'prescription',
-      description: 'Prescription issued for Ram Singh',
-      time: '5 minutes ago',
-      icon: <FileText className="h-4 w-4" />
+      id: 'RX002',
+      patientName: 'Priya Kaur',
+      patientLocation: { lat: 30.2842, lng: 76.1234, address: 'Kotla Village, Punjab' },
+      doctorName: 'Dr. Gupta',
+      consultationTime: '11:15 AM',
+      status: 'pending',
+      urgency: 'high',
+      medicines: [
+        { name: 'Propranolol 40mg', dosage: '1 tablet twice daily', quantity: 14 },
+        { name: 'Alprazolam 0.25mg', dosage: '1/2 tablet when needed', quantity: 10 }
+      ]
     },
     {
-      id: 3,
-      type: 'user',
-      description: 'New patient registered from Kotla',
-      time: '10 minutes ago',
-      icon: <Users className="h-4 w-4" />
+      id: 'RX003',
+      patientName: 'Gurpreet Singh',
+      patientLocation: { lat: 30.2456, lng: 76.0567, address: 'Bhadson Village, Punjab' },
+      doctorName: 'Dr. Kaur',
+      consultationTime: '09:45 AM',
+      status: 'pending',
+      urgency: 'low',
+      medicines: [
+        { name: 'Metformin 500mg', dosage: '1 tablet twice daily', quantity: 60 },
+        { name: 'Amlodipine 5mg', dosage: '1 tablet daily', quantity: 30 }
+      ]
     },
     {
-      id: 4,
-      type: 'medicine',
-      description: 'Medicine stock updated in Bhadson',
-      time: '15 minutes ago',
-      icon: <Pill className="h-4 w-4" />
+      id: 'RX004',
+      patientName: 'Manpreet Kaur',
+      patientLocation: { lat: 30.2700, lng: 76.0800, address: 'Ghanaur, Punjab' },
+      doctorName: 'Dr. Singh',
+      consultationTime: '12:30 PM',
+      status: 'sent_to_pharmacy',
+      urgency: 'medium',
+      medicines: [
+        { name: 'Amoxicillin 500mg', dosage: '1 tablet three times daily', quantity: 21 }
+      ],
+      allocations: [{ pharmacy: { name: 'HealthPlus Pharmacy' }, medicines: [{ name: 'Amoxicillin 500mg' }] }]
+    },
+    {
+      id: 'RX005',
+      patientName: 'Harjeet Singh',
+      patientLocation: { lat: 30.2500, lng: 76.0600, address: 'Dudhansadhan, Punjab' },
+      doctorName: 'Dr. Patel',
+      consultationTime: '02:15 PM',
+      status: 'pending',
+      urgency: 'high',
+      medicines: [
+        { name: 'Insulin Glargine', dosage: '10 units at bedtime', quantity: 1 },
+        { name: 'Glucose strips', dosage: 'As needed for monitoring', quantity: 50 }
+      ]
+    },
+    {
+      id: 'RX006',
+      patientName: 'Jasbir Kaur',
+      patientLocation: { lat: 30.2800, lng: 76.1100, address: 'Sanour, Punjab' },
+      doctorName: 'Dr. Bhalla',
+      consultationTime: '01:45 PM',
+      status: 'pending',
+      urgency: 'low',
+      medicines: [
+        { name: 'Omeprazole 20mg', dosage: '1 tablet before breakfast', quantity: 30 }
+      ]
+    },
+    {
+      id: 'RX007',
+      patientName: 'Rajinder Singh',
+      patientLocation: { lat: 30.2350, lng: 76.0750, address: 'Rampur, Punjab' },
+      doctorName: 'Dr. Arora',
+      consultationTime: '03:00 PM',
+      status: 'pending',
+      urgency: 'medium',
+      medicines: [
+        { name: 'Atorvastatin 20mg', dosage: '1 tablet at night', quantity: 30 },
+        { name: 'Aspirin 75mg', dosage: '1 tablet daily', quantity: 30 }
+      ]
     }
   ];
 
-  const Overview = () => (
-    <div className="space-y-6">
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Users</p>
-              <p className="text-2xl font-bold text-gray-900">{systemStats.totalUsers.toLocaleString()}</p>
-            </div>
-            <div className="bg-blue-100 p-3 rounded-lg">
-              <Users className="h-6 w-6 text-blue-600" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-center">
-            <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-            <span className="text-sm text-green-600">+12% from last month</span>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Active Users</p>
-              <p className="text-2xl font-bold text-gray-900">{systemStats.activeUsers.toLocaleString()}</p>
-            </div>
-            <div className="bg-green-100 p-3 rounded-lg">
-              <Activity className="h-6 w-6 text-green-600" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-center">
-            <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-            <span className="text-sm text-green-600">+8% from last month</span>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Consultations Today</p>
-              <p className="text-2xl font-bold text-gray-900">{systemStats.consultationsToday}</p>
-            </div>
-            <div className="bg-purple-100 p-3 rounded-lg">
-              <Stethoscope className="h-6 w-6 text-purple-600" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-center">
-            <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-            <span className="text-sm text-green-600">+15% from yesterday</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Disease Trends */}
-      <div className="card">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Disease Trends</h3>
-        <div className="space-y-4">
-          {diseaseTrends.map((disease, index) => (
-            <div key={index} className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
-                  <Heart className="h-4 w-4 text-primary-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">{disease.name}</p>
-                  <p className="text-sm text-gray-600">{disease.cases} cases this week</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  disease.trend === 'up' 
-                    ? 'bg-red-100 text-red-800'
-                    : disease.trend === 'down'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {disease.trend === 'up' ? '↗' : disease.trend === 'down' ? '↘' : '→'} {Math.abs(disease.percentage)}%
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Recent Activities */}
-      <div className="card">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activities</h3>
-        <div className="space-y-3">
-          {recentActivities.map((activity) => (
-            <div key={activity.id} className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                {activity.icon}
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-900">{activity.description}</p>
-                <p className="text-xs text-gray-500">{activity.time}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const VillageAnalytics = () => (
-    <div className="space-y-6">
-      <div className="card">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Village-wise Analytics</h3>
-        <div className="space-y-4">
-          {villageData.map((village, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg p-4">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h4 className="font-semibold text-gray-900">{village.name}</h4>
-                  <p className="text-sm text-gray-600">Population: {village.population.toLocaleString()}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-primary-600">{village.consultations}</p>
-                  <p className="text-sm text-gray-600">Consultations</p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600">Satisfaction Rate</p>
-                  <div className="flex items-center space-x-2">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-green-500 h-2 rounded-full" 
-                        style={{ width: `${village.satisfaction}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-sm font-medium text-gray-900">{village.satisfaction}%</span>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Consultation Rate</p>
-                  <p className="text-sm font-medium text-gray-900">
-                    {(village.consultations / village.population * 100).toFixed(2)}%
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const SystemHealth = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">System Performance</h3>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Server Uptime</span>
-              <span className="text-sm font-medium text-green-600">99.9%</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Response Time</span>
-              <span className="text-sm font-medium text-green-600">120ms</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Database Status</span>
-              <span className="text-sm font-medium text-green-600">Healthy</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Video Quality</span>
-              <span className="text-sm font-medium text-green-600">HD</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Resource Usage</h3>
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-sm text-gray-600">CPU Usage</span>
-                <span className="text-sm font-medium text-gray-900">45%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-blue-500 h-2 rounded-full" style={{ width: '45%' }}></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-sm text-gray-600">Memory Usage</span>
-                <span className="text-sm font-medium text-gray-900">62%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-green-500 h-2 rounded-full" style={{ width: '62%' }}></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-sm text-gray-600">Storage</span>
-                <span className="text-sm font-medium text-gray-900">38%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '38%' }}></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="card">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Alerts & Notifications</h3>
-        <div className="space-y-3">
-          <div className="flex items-center space-x-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <AlertTriangle className="h-5 w-5 text-yellow-600" />
-            <div>
-              <p className="text-sm font-medium text-yellow-800">High consultation volume in Nabha</p>
-              <p className="text-xs text-yellow-600">Consider adding more doctors</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-            <CheckCircle className="h-5 w-5 text-green-600" />
-            <div>
-              <p className="text-sm font-medium text-green-800">System backup completed successfully</p>
-              <p className="text-xs text-green-600">All data is secure</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <Clock className="h-5 w-5 text-blue-600" />
-            <div>
-              <p className="text-sm font-medium text-blue-800">Scheduled maintenance in 2 hours</p>
-              <p className="text-xs text-blue-600">System will be down for 30 minutes</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const tabs = [
-    { id: 'overview', label: 'Overview', icon: <BarChart3 className="h-4 w-4" /> },
-    { id: 'villages', label: 'Village Analytics', icon: <MapPin className="h-4 w-4" /> },
-    { id: 'system', label: 'System Health', icon: <Activity className="h-4 w-4" /> },
-    { id: 'reports', label: 'Reports', icon: <FileText className="h-4 w-4" /> }
+  // Mock pharmacy data with medicine inventory
+  const pharmacyDatabase = [
+    {
+      id: 'PH001',
+      name: 'HealthPlus Pharmacy',
+      location: { lat: 30.2650, lng: 76.0850, address: 'Main Market, Nabha' },
+      contact: '+91-9876543210',
+      rating: 4.8,
+      deliveryTime: '30 mins',
+      inventory: {
+        'Paracetamol 500mg': { available: true, stock: 150 },
+        'Cetirizine 10mg': { available: true, stock: 80 },
+        'Vitamin C tablets': { available: false, stock: 0 },
+        'Propranolol 40mg': { available: true, stock: 45 },
+        'Alprazolam 0.25mg': { available: true, stock: 25 },
+        'Metformin 500mg': { available: true, stock: 120 },
+        'Amlodipine 5mg': { available: true, stock: 90 },
+        'Amoxicillin 500mg': { available: true, stock: 60 }
+      }
+    },
+    {
+      id: 'PH002',
+      name: 'MediCare Central',
+      location: { lat: 30.2845, lng: 76.1240, address: 'Civil Lines, Kotla' },
+      contact: '+91-9876543211',
+      rating: 4.6,
+      deliveryTime: '45 mins',
+      inventory: {
+        'Paracetamol 500mg': { available: true, stock: 100 },
+        'Vitamin C tablets': { available: true, stock: 75 },
+        'Propranolol 40mg': { available: true, stock: 30 },
+        'Alprazolam 0.25mg': { available: true, stock: 15 },
+        'Insulin Glargine': { available: true, stock: 10 },
+        'Glucose strips': { available: true, stock: 200 },
+        'Omeprazole 20mg': { available: true, stock: 80 }
+      }
+    },
+    {
+      id: 'PH003',
+      name: 'Apollo Pharmacy',
+      location: { lat: 30.2460, lng: 76.0570, address: 'Main Road, Bhadson' },
+      contact: '+91-9876543212',
+      rating: 4.7,
+      deliveryTime: '60 mins',
+      inventory: {
+        'Paracetamol 500mg': { available: true, stock: 200 },
+        'Vitamin C tablets': { available: true, stock: 100 },
+        'Metformin 500mg': { available: true, stock: 150 },
+        'Amlodipine 5mg': { available: true, stock: 80 },
+        'Cetirizine 10mg': { available: true, stock: 60 },
+        'Atorvastatin 20mg': { available: true, stock: 40 },
+        'Aspirin 75mg': { available: true, stock: 120 }
+      }
+    },
+    {
+      id: 'PH004',
+      name: 'Life Pharmacy',
+      location: { lat: 30.2700, lng: 76.0900, address: 'Hospital Road, Nabha' },
+      contact: '+91-9876543213',
+      rating: 4.4,
+      deliveryTime: '40 mins',
+      inventory: {
+        'Vitamin C tablets': { available: true, stock: 50 },
+        'Alprazolam 0.25mg': { available: true, stock: 20 },
+        'Amlodipine 5mg': { available: true, stock: 70 },
+        'Omeprazole 20mg': { available: true, stock: 45 },
+        'Atorvastatin 20mg': { available: false, stock: 0 },
+        'Aspirin 75mg': { available: true, stock: 90 }
+      }
+    }
   ];
 
+  useEffect(() => {
+    setIncomingPrescriptions(mockIncomingPrescriptions);
+  }, []);
+
+  // Calculate distance between two coordinates
+  const calculateDistance = (lat1, lng1, lat2, lng2) => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + 
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  // Smart allocation algorithm
+  const allocateMedicines = (prescription) => {
+    setLoading(true);
+    
+    const pharmaciesWithDistance = pharmacyDatabase.map(pharmacy => ({
+      ...pharmacy,
+      distance: Math.round(calculateDistance(
+        prescription.patientLocation.lat,
+        prescription.patientLocation.lng,
+        pharmacy.location.lat,
+        pharmacy.location.lng
+      ) * 10) / 10
+    })).sort((a, b) => a.distance - b.distance);
+
+    let remainingMedicines = [...prescription.medicines];
+    const allocations = [];
+
+    for (const pharmacy of pharmaciesWithDistance) {
+      const availableMedicines = remainingMedicines.filter(medicine => {
+        const inventory = pharmacy.inventory[medicine.name];
+        return inventory?.available && inventory.stock >= medicine.quantity;
+      });
+
+      if (availableMedicines.length > 0) {
+        allocations.push({
+          pharmacy,
+          medicines: availableMedicines,
+          isPrimary: allocations.length === 0
+        });
+
+        remainingMedicines = remainingMedicines.filter(medicine => 
+          !availableMedicines.some(allocated => allocated.name === medicine.name)
+        );
+      }
+
+      if (remainingMedicines.length === 0) break;
+    }
+
+    const unallocatedPharmacies = pharmaciesWithDistance
+      .filter(pharmacy => !allocations.some(alloc => alloc.pharmacy.id === pharmacy.id))
+      .slice(0, 3);
+
+    unallocatedPharmacies.forEach(pharmacy => {
+      allocations.push({
+        pharmacy,
+        medicines: [],
+        isPrimary: false,
+        isReference: true
+      });
+    });
+
+    setTimeout(() => {
+      setPharmacyAllocations({
+        allocations,
+        unfulfilledMedicines: remainingMedicines,
+        totalAllocated: prescription.medicines.length - remainingMedicines.length
+      });
+      setLoading(false);
+    }, 1000);
+  };
+
+  const handlePrescriptionSelect = (prescription) => {
+    setSelectedPrescription(prescription);
+    allocateMedicines(prescription);
+  };
+
+  const sendAllocationToPharmacies = () => {
+    const allocationsWithMedicines = pharmacyAllocations.allocations.filter(alloc => alloc.medicines.length > 0);
+    
+    if (allocationsWithMedicines.length === 0) {
+      alert('No medicines can be fulfilled by available pharmacies.');
+      return;
+    }
+
+    const updatedPrescriptions = incomingPrescriptions.map(p => 
+      p.id === selectedPrescription.id 
+        ? { ...p, status: 'sent_to_pharmacy', allocations: allocationsWithMedicines }
+        : p
+    );
+    setIncomingPrescriptions(updatedPrescriptions);
+    
+    const notifications = allocationsWithMedicines.map(alloc => 
+      `${alloc.pharmacy.name}: ${alloc.medicines.map(m => m.name).join(', ')}`
+    ).join('\n');
+    
+    alert(`Prescription ${selectedPrescription.id} allocated to pharmacies:\n${notifications}`);
+    
+    setSelectedPrescription(null);
+    setPharmacyAllocations([]);
+  };
+
+  const getStatusBadge = (status) => {
+    const styles = {
+      pending: 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+      sent_to_pharmacy: 'bg-blue-50 text-blue-700 border border-blue-200',
+      completed: 'bg-green-50 text-green-700 border border-green-200'
+    };
+    return styles[status] || 'bg-gray-50 text-gray-700 border border-gray-200';
+  };
+
+  const getUrgencyBadge = (urgency) => {
+    const styles = {
+      high: 'bg-red-50 text-red-700 border border-red-200',
+      medium: 'bg-orange-50 text-orange-700 border border-orange-200',
+      low: 'bg-green-50 text-green-700 border border-green-200'
+    };
+    return styles[urgency] || 'bg-gray-50 text-gray-700 border border-gray-200';
+  };
+
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex justify-between items-start">
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900">Prescription Management</h1>
+              <p className="text-gray-600 text-sm mt-1">Allocate prescriptions to nearest pharmacies</p>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900">Admin Dashboard</p>
+                <p className="text-xs text-gray-500">Healthcare Coordinator</p>
+              </div>
+              <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                A
+              </div>
+              <button className="p-2 text-gray-400 hover:text-red-600">
+                <LogOut className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center">
+              <div className="p-2 bg-yellow-50 rounded-lg">
+                <Clock className="h-5 w-5 text-yellow-600" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-gray-600">Pending</p>
+                <p className="text-xl font-semibold text-gray-900">
+                  {incomingPrescriptions.filter(p => p.status === 'pending').length}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <Send className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-gray-600">Allocated</p>
+                <p className="text-xl font-semibold text-gray-900">
+                  {incomingPrescriptions.filter(p => p.status === 'sent_to_pharmacy').length}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center">
+              <div className="p-2 bg-red-50 rounded-lg">
+                <AlertTriangle className="h-5 w-5 text-red-600" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-gray-600">High Priority</p>
+                <p className="text-xl font-semibold text-gray-900">
+                  {incomingPrescriptions.filter(p => p.urgency === 'high').length}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center">
+              <div className="p-2 bg-gray-50 rounded-lg">
+                <FileText className="h-5 w-5 text-gray-600" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-gray-600">Total Today</p>
+                <p className="text-xl font-semibold text-gray-900">{incomingPrescriptions.length}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Prescriptions List */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900">Incoming Prescriptions</h2>
+                  <button className="p-2 text-gray-400 hover:text-gray-600">
+                    <RefreshCw className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="divide-y divide-gray-100">
+                {incomingPrescriptions.map((prescription) => (
+                  <div 
+                    key={prescription.id} 
+                    className={`p-5 cursor-pointer hover:bg-gray-50 transition-colors ${
+                      selectedPrescription?.id === prescription.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                    }`}
+                    onClick={() => handlePrescriptionSelect(prescription)}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-base font-semibold text-gray-900">{prescription.patientName}</h3>
+                          <span className={`px-2 py-1 rounded-md text-xs font-medium ${getUrgencyBadge(prescription.urgency)}`}>
+                            {prescription.urgency}
+                          </span>
+                          <span className={`px-2 py-1 rounded-md text-xs font-medium ${getStatusBadge(prescription.status)}`}>
+                            {prescription.status.replace('_', ' ')}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-1">ID: {prescription.id} • Dr. {prescription.doctorName} • {prescription.consultationTime}</p>
+                        <div className="flex items-center text-sm text-gray-500">
+                          <MapPin className="h-4 w-4 mr-1" />
+                          <span>{prescription.patientLocation.address}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mb-3">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Prescribed Medicines:</h4>
+                      <div className="grid gap-2">
+                        {prescription.medicines.map((medicine, index) => (
+                          <div key={index} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">{medicine.name}</p>
+                                <p className="text-xs text-gray-600">{medicine.dosage}</p>
+                              </div>
+                              <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
+                                Qty: {medicine.quantity}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {prescription.allocations && (
+                      <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                        <p className="text-sm text-green-700 font-medium flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4" />
+                          Allocated to {prescription.allocations.length} pharmacy(ies)
+                        </p>
+                        <div className="mt-1 text-xs text-green-600">
+                          {prescription.allocations.map((alloc, idx) => (
+                            <span key={idx}>
+                              {alloc.pharmacy.name}: {alloc.medicines.map(m => m.name).join(', ')}
+                              {idx < prescription.allocations.length - 1 && ' | '}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Pharmacy Allocation */}
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-            <p className="text-gray-600">Welcome back, {user?.name || 'Admin'}! Monitor system performance and healthcare analytics</p>
-          </div>
-          
-          {/* User Actions */}
-          <div className="flex items-center space-x-4">
-            <NotificationSystem userType="admin" />
-            <button 
-              onClick={logout}
-              className="p-2 text-gray-400 hover:text-red-600"
-              title="Logout"
-            >
-              <LogOut className="h-6 w-6" />
-            </button>
-          </div>
-        </div>
-      </div>
+            <div className="bg-white rounded-lg border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Pharmacy Allocation</h2>
+                {selectedPrescription && (
+                  <p className="text-sm text-gray-600">{selectedPrescription.patientName} ({selectedPrescription.id})</p>
+                )}
+              </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="card">
-          <div className="flex items-center">
-            <div className="bg-blue-100 p-3 rounded-lg">
-              <Users className="h-6 w-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Users</p>
-              <p className="text-2xl font-bold text-gray-900">{systemStats.totalUsers.toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="card">
-          <div className="flex items-center">
-            <div className="bg-green-100 p-3 rounded-lg">
-              <Stethoscope className="h-6 w-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Consultations Today</p>
-              <p className="text-2xl font-bold text-gray-900">{systemStats.consultationsToday}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="card">
-          <div className="flex items-center">
-            <div className="bg-purple-100 p-3 rounded-lg">
-              <MapPin className="h-6 w-6 text-purple-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Villages Covered</p>
-              <p className="text-2xl font-bold text-gray-900">{systemStats.villagesCovered}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="card">
-          <div className="flex items-center">
-            <div className="bg-orange-100 p-3 rounded-lg">
-              <Heart className="h-6 w-6 text-orange-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Satisfaction Rate</p>
-              <p className="text-2xl font-bold text-gray-900">{systemStats.satisfactionRate}%</p>
-            </div>
-          </div>
-        </div>
-      </div>
+              <div className="p-6">
+                {!selectedPrescription ? (
+                  <div className="text-center py-8">
+                    <Building2 className="h-8 w-8 text-gray-400 mx-auto mb-3" />
+                    <p className="text-sm text-gray-500">Select a prescription to view allocations</p>
+                  </div>
+                ) : loading ? (
+                  <div className="text-center py-8">
+                    <RefreshCw className="h-6 w-6 text-blue-500 mx-auto animate-spin mb-3" />
+                    <p className="text-sm text-gray-600">Finding optimal allocation...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Summary */}
+                    {pharmacyAllocations.allocations && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <h3 className="text-sm font-semibold text-gray-900 mb-1">Allocation Summary</h3>
+                        <p className="text-xs text-gray-700">
+                          {pharmacyAllocations.totalAllocated} of {selectedPrescription.medicines.length} medicines allocated
+                        </p>
+                        {pharmacyAllocations.unfulfilledMedicines.length > 0 && (
+                          <p className="text-xs text-red-600 mt-1">
+                            Unable to fulfill: {pharmacyAllocations.unfulfilledMedicines.map(m => m.name).join(', ')}
+                          </p>
+                        )}
+                      </div>
+                    )}
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="-mb-px flex space-x-8">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === tab.id
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              {tab.icon}
-              <span>{tab.label}</span>
-            </button>
-          ))}
-        </nav>
-      </div>
+                    {/* Allocations */}
+                    {pharmacyAllocations.allocations?.map((allocation, index) => (
+                      <div 
+                        key={allocation.pharmacy.id} 
+                        className={`border rounded-lg p-3 ${
+                          allocation.medicines.length > 0
+                            ? allocation.isPrimary 
+                              ? 'border-green-300 bg-green-50'
+                              : 'border-blue-300 bg-blue-50'
+                            : 'border-gray-200 bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="text-sm font-semibold text-gray-900">{allocation.pharmacy.name}</h4>
+                              {allocation.isPrimary && allocation.medicines.length > 0 && (
+                                <span className="bg-green-600 text-white text-xs px-2 py-1 rounded">PRIMARY</span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-600 mb-1">{allocation.pharmacy.location.address}</p>
+                            <div className="flex items-center gap-3 text-xs text-gray-500">
+                              <span>{allocation.pharmacy.distance} km</span>
+                              <span>{allocation.pharmacy.rating} ★</span>
+                              <span>{allocation.pharmacy.deliveryTime}</span>
+                            </div>
+                          </div>
+                        </div>
 
-      {/* Tab Content */}
-      <div>
-        {activeTab === 'overview' && <Overview />}
-        {activeTab === 'villages' && <VillageAnalytics />}
-        {activeTab === 'system' && <SystemHealth />}
-        {activeTab === 'reports' && (
-          <div className="card">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Reports</h3>
-            <p className="text-gray-600">Reports dashboard coming soon...</p>
+                        {allocation.medicines.length > 0 && (
+                          <div className="mt-2">
+                            <h5 className="text-xs font-medium text-gray-700 mb-1">Allocated medicines:</h5>
+                            <div className="space-y-1">
+                              {allocation.medicines.map((medicine, idx) => (
+                                <div key={idx} className="flex items-center justify-between bg-white rounded p-2 border">
+                                  <span className="text-xs text-gray-900">{medicine.name}</span>
+                                  <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                                    Qty: {medicine.quantity}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
+                    {/* Send Button */}
+                    {pharmacyAllocations.allocations?.some(alloc => alloc.medicines.length > 0) && (
+                      <button 
+                        onClick={sendAllocationToPharmacies}
+                        className="w-full bg-blue-600 text-white font-medium py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Send to Pharmacies
+                      </button>
+                    )}
+
+                    {pharmacyAllocations.allocations?.length === 0 && (
+                      <div className="text-center py-6 bg-red-50 border border-red-200 rounded-lg">
+                        <AlertTriangle className="h-6 w-6 text-red-500 mx-auto mb-2" />
+                        <p className="text-sm text-red-700">No compatible pharmacies found</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
 };
 
-export default AdminDashboard;
+export default PrescriptionManagementDashboard;
