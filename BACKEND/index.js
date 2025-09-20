@@ -9,6 +9,7 @@ import redisClient from './config/redis.js';
 
 // Import routes
 import authRoutes from './routes/authRoutes.js';
+import symptomRoutes from './routes/symptomRoutes.js';
 
 // Import middleware
 import { generalLimiter } from './middleware/rateLimiter.js';
@@ -19,6 +20,9 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Trust proxy settings for rate limiting to work correctly
+app.set('trust proxy', 1);
 
 // Security middleware
 app.use(helmet());
@@ -38,6 +42,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/symptoms', symptomRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -47,6 +52,7 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     endpoints: {
       auth: '/api/auth',
+      symptoms: '/api/symptoms',
       health: '/api/auth/health'
     }
   });

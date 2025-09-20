@@ -40,3 +40,20 @@ export const authLimiter = rateLimit({
   legacyHeaders: false,
   skipSuccessfulRequests: true
 });
+
+// Factory function to create custom rate limiters
+export const createRateLimiter = (max, windowMs) => {
+  return rateLimit({
+    windowMs: windowMs,
+    max: max,
+    message: {
+      success: false,
+      message: 'Too many requests from this IP, please try again later'
+    },
+    standardHeaders: true,
+    legacyHeaders: false
+  });
+};
+
+// Alias for backward compatibility
+export const rateLimiter = createRateLimiter;

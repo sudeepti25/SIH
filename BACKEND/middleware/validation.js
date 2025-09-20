@@ -104,4 +104,57 @@ export const validateRefreshToken = [
     .notEmpty()
     .withMessage('Refresh token is required')
 ];
+
+// Symptom analysis validation
+export const validateSymptomAnalysis = [
+  body('symptoms')
+    .isArray({ min: 1, max: 20 })
+    .withMessage('Symptoms array is required and must contain 1-20 symptoms'),
+  body('symptoms.*.name')
+    .notEmpty()
+    .withMessage('Symptom name is required')
+    .isLength({ min: 2, max: 100 })
+    .withMessage('Symptom name must be between 2 and 100 characters')
+    .matches(/^[a-zA-Z\s\-'()]+$/)
+    .withMessage('Symptom name can only contain letters, spaces, hyphens, apostrophes, and parentheses'),
+  body('symptoms.*.severity')
+    .isInt({ min: 1, max: 10 })
+    .withMessage('Severity must be an integer between 1 and 10'),
+  body('symptoms.*.duration')
+    .optional()
+    .isLength({ min: 1, max: 50 })
+    .withMessage('Duration must be between 1 and 50 characters'),
+  body('patientInfo.age')
+    .optional()
+    .isInt({ min: 0, max: 150 })
+    .withMessage('Age must be between 0 and 150'),
+  body('patientInfo.gender')
+    .optional()
+    .isIn(['M', 'F', 'Other'])
+    .withMessage('Gender must be M, F, or Other'),
+  body('patientInfo.medicalHistory')
+    .optional()
+    .isArray()
+    .withMessage('Medical history must be an array'),
+  body('patientInfo.allergies')
+    .optional()
+    .isArray()
+    .withMessage('Allergies must be an array'),
+  body('patientInfo.currentMedications')
+    .optional()
+    .isArray()
+    .withMessage('Current medications must be an array')
+];
+
+export const validateSymptomData = [
+  body('symptoms')
+    .isArray({ min: 1 })
+    .withMessage('Symptoms array is required and must contain at least one symptom'),
+  body('symptoms.*.name')
+    .notEmpty()
+    .withMessage('Symptom name is required'),
+  body('symptoms.*.severity')
+    .isInt({ min: 1, max: 10 })
+    .withMessage('Severity must be an integer between 1 and 10')
+];
   
