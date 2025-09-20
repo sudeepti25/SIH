@@ -4,10 +4,26 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
+// Initialize Twilio client with error handling
+let twilioClient = null;
+
+try {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  
+  if (accountSid && authToken && 
+      accountSid !== 'your_twilio_account_sid' && 
+      authToken !== 'your_twilio_auth_token' &&
+      accountSid.startsWith('AC')) {
+    twilioClient = twilio(accountSid, authToken);
+    console.log('✅ Twilio client initialized successfully');
+  } else {
+    console.warn('⚠️  Twilio credentials not configured. SMS functionality will be disabled.');
+  }
+} catch (error) {
+  console.error('Failed to initialize Twilio client:', error.message);
+  twilioClient = null;
+}
 
 class OTPService {
   static generateOTP() {
@@ -40,13 +56,15 @@ await redisClient.setEx(
   (parseInt(attempts) + 1).toString()
 );
 
-      // Send SMS (only in production or if explicitly enabled)
-      if (process.env.NODE_ENV === 'production' || process.env.ENABLE_SMS === 'true') {
+      // Send SMS (only if Twilio is configured and in production or if explicitly enabled)
+      if (twilioClient && (process.env.NODE_ENV === 'production' || process.env.ENABLE_SMS === 'true')) {
         await twilioClient.messages.create({
           body: `Your OTP for MVP Auth is: ${otp}. Valid for ${process.env.OTP_EXPIRY_MINUTES} minutes.`,
           from: process.env.TWILIO_PHONE_NUMBER,
           to: `+91${mobileNumber}` // Assuming Indian numbers
         });
+      } else {
+        console.log(`📱 SMS disabled. OTP for ${mobileNumber}: ${otp}`);
       }
 
       // In development, return OTP for testing

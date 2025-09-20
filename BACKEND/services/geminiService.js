@@ -31,6 +31,11 @@ class GeminiService {
    */
   async analyzeSymptoms(symptoms) {
     try {
+      // Validate input
+      if (!symptoms || !Array.isArray(symptoms) || symptoms.length === 0) {
+        throw new Error('Invalid symptoms data: must be a non-empty array');
+      }
+
       // If Gemini is not available, return mock data for development
       if (!this.isAvailable) {
         console.warn('⚠️  Using mock symptom analysis response (Gemini API not configured)');
@@ -47,10 +52,20 @@ class GeminiService {
       // Construct the prompt for Gemini
       const prompt = this.constructAnalysisPrompt(symptoms);
       
-      // Generate response using Gemini
-      const result = await this.model.generateContent(prompt);
+      console.log('🤖 Sending request to Gemini AI for symptom analysis...');
+      
+      // Generate response using Gemini with timeout
+      const result = await Promise.race([
+        this.model.generateContent(prompt),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Gemini API timeout')), 30000)
+        )
+      ]);
+      
       const response = await result.response;
       const text = response.text();
+
+      console.log('✅ Received response from Gemini AI');
 
       // Parse the JSON response
       const analysisResult = this.parseGeminiResponse(text);
@@ -61,7 +76,7 @@ class GeminiService {
       };
 
     } catch (error) {
-      console.error('Error analyzing symptoms with Gemini:', error);
+      console.error('Error analyzing symptoms with Gemini:', error.message);
       // Fallback to mock response if Gemini fails
       console.warn('⚠️  Falling back to mock response due to Gemini error');
       return this.getMockAnalysisResponse(symptoms);
@@ -197,14 +212,26 @@ Respond with only the JSON object, no additional text.`;
       if (highSeveritySymptoms.length === 0) {
         return {
           isEmergency: false,
+          urgencyLevel: 'Low',
+          timeframe: 'No immediate concern',
           message: 'No high-severity symptoms detected'
+        };
+      }
+
+      // If Gemini is not available, use basic logic
+      if (!this.isAvailable || !this.model) {
+        return {
+          isEmergency: true,
+          urgencyLevel: 'High',
+          timeframe: 'Seek immediate care',
+          reason: 'High severity symptoms detected - medical evaluation recommended'
         };
       }
 
       const emergencyPrompt = `Assess if these high-severity symptoms require emergency medical attention:
 ${highSeveritySymptoms.map(s => `- ${s.name} (Severity: ${s.severity}/10)`).join('\n')}
 
-Respond with JSON:
+Respond with JSON only:
 {
   "isEmergency": true/false,
   "urgencyLevel": "Low/Medium/High/Critical",
@@ -212,13 +239,21 @@ Respond with JSON:
   "reason": "Brief explanation"
 }`;
 
-      const result = await this.model.generateContent(emergencyPrompt);
+      const result = await Promise.race([
+        this.model.generateContent(emergencyPrompt),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Emergency assessment timeout')), 15000)
+        )
+      ]);
+      
       const response = await result.response;
       const text = response.text();
       
-      return JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, ''));
+      const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      return JSON.parse(cleanedText);
+      
     } catch (error) {
-      console.error('Error in emergency assessment:', error);
+      console.error('Error in emergency assessment:', error.message);
       return {
         isEmergency: true, // Default to emergency for safety
         urgencyLevel: 'High',

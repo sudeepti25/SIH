@@ -3,6 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { useUser } from '../contexts/UserContext';
 import VideoConsultation from '../components/VideoConsultation';
 import NotificationSystem from '../components/NotificationSystem';
+import EnhancedDoctorDashboard from './EnhancedDoctorDashboard';
+import { 
+  generatePrescriptionId, 
+  completePrescriptionWorkflow, 
+  validatePrescription 
+} from '../utils/prescriptionUtils';
 import { 
   Stethoscope, 
   Users, 
@@ -30,7 +36,7 @@ import {
 
 const DoctorDashboard = () => {
   const { user, logout } = useUser();
-  const [activeTab, setActiveTab] = useState('queue');
+  const [activeTab, setActiveTab] = useState('ai-queue');
   const [isVideoCallActive, setIsVideoCallActive] = useState(false);
   const [currentPatient, setCurrentPatient] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -221,6 +227,27 @@ const DoctorDashboard = () => {
     setIsVideoCallActive(true);
   };
 
+  // Function to call patient
+  const handleCallPatient = (patient) => {
+    const confirmCall = window.confirm(
+      `Call ${patient.name}?\n\nPhone: ${patient.phone || 'Phone number not available'}\n\nThis will initiate a phone call.`
+    );
+    
+    if (confirmCall) {
+      // In a real implementation, this would integrate with telephony system
+      alert(`Calling ${patient.name}...\n\nPhone: ${patient.phone || 'Number not available'}`);
+      
+      // Optional: Add to notifications
+      const newNotification = {
+        id: Date.now(),
+        message: `Called patient: ${patient.name}`,
+        time: new Date().toLocaleTimeString(),
+        type: 'call'
+      };
+      setNotifications(prev => [newNotification, ...prev]);
+    }
+  };
+
   // Function to add custom medicine to database
   const handleAddCustomMedicine = () => {
     if (!customMedicineForm.name || !customMedicineForm.dosage || !customMedicineForm.frequency) {
@@ -260,39 +287,74 @@ const DoctorDashboard = () => {
 
   // Function to generate prescription
   const handleGeneratePrescription = () => {
-    if (!prescriptionForm.diagnosis || prescriptionForm.medicines.length === 0) {
-      alert('Please fill in diagnosis and add at least one medicine');
+    // Validate prescription data
+    const validation = validatePrescription(prescriptionForm);
+    if (!validation.isValid) {
+      alert('Please fix the following errors:\n\n' + validation.errors.join('\n'));
       return;
     }
 
+    const prescriptionId = generatePrescriptionId(user?.id, selectedPatient?.id);
+    const currentDate = new Date();
+    
     const newConsultation = {
       id: Date.now(),
       patient: selectedPatient?.name || 'Unknown Patient',
-      date: new Date().toISOString().split('T')[0],
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      patientId: selectedPatient?.id || 'unknown',
+      patientPhone: selectedPatient?.phone || 'N/A',
+      patientAge: selectedPatient?.age || 'N/A',
+      patientGender: selectedPatient?.gender || 'N/A',
+      date: currentDate.toISOString().split('T')[0],
+      time: currentDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       diagnosis: prescriptionForm.diagnosis,
       status: 'completed',
       prescription: {
+        id: prescriptionId,
         medicines: prescriptionForm.medicines,
         instructions: prescriptionForm.instructions,
-        followUp: prescriptionForm.followUp
+        followUp: prescriptionForm.followUp,
+        issuedDate: currentDate.toISOString(),
+        validUntil: new Date(currentDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days validity
       },
-      notes: 'Prescription generated',
-      doctor: user?.name || 'Dr. Unknown'
+      notes: 'Prescription generated and sent to patient and admin',
+      doctor: user?.name || 'Dr. Unknown',
+      doctorId: user?.id || 'unknown'
     };
 
-    setRecentConsultations(prev => [newConsultation, ...prev]);
-    alert('Prescription generated successfully!');
-    setShowPrescriptionModal(false);
-    setPrescriptionForm({
-      patientId: '',
-      diagnosis: '',
-      medicines: [],
-      instructions: '',
-      followUp: ''
-    });
-    setSelectedPatient(null);
+    // Use utility function to complete the workflow
+    const result = completePrescriptionWorkflow(newConsultation, 'new');
+    
+    if (result.success) {
+      setRecentConsultations(prev => [newConsultation, ...prev]);
+      
+      // Enhanced success message
+      alert(`Prescription generated successfully! 🎉\n\n` +
+            `📋 Prescription ID: ${prescriptionId}\n` +
+            `👤 Patient: ${selectedPatient?.name}\n` +
+            `⚕️ Doctor: ${user?.name}\n\n` +
+            `✅ Sent to Admin Management System\n` +
+            `✅ Sent to Patient Notification System\n` +
+            `✅ Available for Pharmacy Processing\n\n` +
+            `The prescription is now in the system and the patient has been notified.`);
+      
+      setShowPrescriptionModal(false);
+      setPrescriptionForm({
+        patientId: '',
+        diagnosis: '',
+        medicines: [],
+        instructions: '',
+        followUp: ''
+      });
+      setSelectedPatient(null);
+    } else {
+      alert(`Failed to send prescription notifications!\n\n` +
+            `Error: ${result.error || 'Unknown error'}\n\n` +
+            `The prescription was created but notifications may not have been sent. ` +
+            `Please check with the admin system.`);
+    }
   };
+
+
 
   // Function to add medicine to prescription
   const handleAddMedicine = (medicine) => {
@@ -326,38 +388,142 @@ const DoctorDashboard = () => {
 
   // Function to update existing prescription
   const handleUpdatePrescription = () => {
-    if (!prescriptionForm.diagnosis || prescriptionForm.medicines.length === 0) {
-      alert('Please fill in diagnosis and add at least one medicine');
+    // Validate prescription data
+    const validation = validatePrescription(prescriptionForm);
+    if (!validation.isValid) {
+      alert('Please fix the following errors:\n\n' + validation.errors.join('\n'));
       return;
     }
 
-    setRecentConsultations(prev => 
-      prev.map(consultation => 
-        consultation.id === editingPrescription.id 
-          ? {
-              ...consultation,
-              diagnosis: prescriptionForm.diagnosis,
-              prescription: {
-                medicines: prescriptionForm.medicines,
-                instructions: prescriptionForm.instructions,
-                followUp: prescriptionForm.followUp
-              }
-            }
-          : consultation
-      )
-    );
+    const currentDate = new Date();
+    const updatedConsultation = {
+      ...editingPrescription,
+      diagnosis: prescriptionForm.diagnosis,
+      prescription: {
+        ...editingPrescription.prescription,
+        medicines: prescriptionForm.medicines,
+        instructions: prescriptionForm.instructions,
+        followUp: prescriptionForm.followUp,
+        lastUpdated: currentDate.toISOString(),
+        updatedBy: user?.name || 'Dr. Unknown'
+      },
+      notes: 'Prescription updated and re-sent to patient and admin'
+    };
 
-    alert('Prescription updated successfully!');
-    setShowPrescriptionModal(false);
-    setEditingPrescription(null);
-    setPrescriptionForm({
-      patientId: '',
-      diagnosis: '',
-      medicines: [],
-      instructions: '',
-      followUp: ''
-    });
-    setSelectedPatient(null);
+    // Use utility function to complete the update workflow
+    const result = completePrescriptionWorkflow(updatedConsultation, 'update');
+
+    if (result.success) {
+      setRecentConsultations(prev => 
+        prev.map(consultation => 
+          consultation.id === editingPrescription.id ? updatedConsultation : consultation
+        )
+      );
+
+      alert(`Prescription updated successfully! 🔄\n\n` +
+            `📋 Prescription ID: ${updatedConsultation.prescription.id || 'N/A'}\n` +
+            `👤 Patient: ${updatedConsultation.patient}\n` +
+            `⚕️ Updated by: ${user?.name}\n\n` +
+            `✅ Updated prescription sent to Admin\n` +
+            `✅ Updated prescription sent to Patient\n` +
+            `✅ Previous version superseded\n\n` +
+            `The patient has been notified of the changes.`);
+      
+      setShowPrescriptionModal(false);
+      setEditingPrescription(null);
+      setPrescriptionForm({
+        patientId: '',
+        diagnosis: '',
+        medicines: [],
+        instructions: '',
+        followUp: ''
+      });
+      setSelectedPatient(null);
+    } else {
+      alert(`Failed to send prescription update notifications!\n\n` +
+            `Error: ${result.error || 'Unknown error'}\n\n` +
+            `The prescription was updated but notifications may not have been sent.`);
+    }
+  };
+
+  // Function to send prescription update to admin
+  const sendPrescriptionUpdateToAdmin = (consultation) => {
+    try {
+      const existingAdminNotifications = JSON.parse(
+        localStorage.getItem('adminNotifications') || '[]'
+      );
+
+      const adminNotification = {
+        id: `admin-presc-update-${Date.now()}`,
+        type: 'prescription_update',
+        title: 'Prescription Updated',
+        message: `Dr. ${consultation.doctor} updated prescription for ${consultation.patient}`,
+        prescriptionData: {
+          prescriptionId: consultation.prescription.id || 'N/A',
+          doctorName: consultation.doctor,
+          patientName: consultation.patient,
+          patientId: consultation.patientId,
+          diagnosis: consultation.diagnosis,
+          medicines: consultation.prescription.medicines,
+          instructions: consultation.prescription.instructions,
+          followUp: consultation.prescription.followUp,
+          lastUpdated: consultation.prescription.lastUpdated,
+          updatedBy: consultation.prescription.updatedBy,
+          status: 'updated_pending_pharmacy_approval'
+        },
+        timestamp: new Date().toISOString(),
+        priority: 'medium',
+        read: false,
+        category: 'medical_update'
+      };
+
+      localStorage.setItem('adminNotifications', 
+        JSON.stringify([adminNotification, ...existingAdminNotifications]));
+
+      console.log('✅ Prescription update sent to Admin:', adminNotification);
+    } catch (error) {
+      console.error('❌ Failed to send prescription update to admin:', error);
+    }
+  };
+
+  // Function to send prescription update to patient
+  const sendPrescriptionUpdateToPatient = (consultation) => {
+    try {
+      const patientNotificationKey = `patientNotifications_${consultation.patientId || 'unknown'}`;
+      const existingPatientNotifications = JSON.parse(
+        localStorage.getItem(patientNotificationKey) || '[]'
+      );
+
+      const patientNotification = {
+        id: `patient-presc-update-${Date.now()}`,
+        type: 'prescription_updated',
+        title: 'Your Prescription Has Been Updated',
+        message: `Dr. ${consultation.doctor} has updated your prescription`,
+        prescriptionData: {
+          prescriptionId: consultation.prescription.id || 'N/A',
+          doctorName: consultation.doctor,
+          diagnosis: consultation.diagnosis,
+          medicines: consultation.prescription.medicines,
+          instructions: consultation.prescription.instructions,
+          followUp: consultation.prescription.followUp,
+          lastUpdated: consultation.prescription.lastUpdated,
+          pharmacyStatus: 'pending_update',
+          downloadable: true
+        },
+        timestamp: new Date().toISOString(),
+        priority: 'high',
+        read: false,
+        category: 'prescription_update',
+        actionRequired: 'Check updated prescription before pharmacy visit'
+      };
+
+      localStorage.setItem(patientNotificationKey, 
+        JSON.stringify([patientNotification, ...existingPatientNotifications]));
+
+      console.log('✅ Prescription update sent to Patient:', patientNotification);
+    } catch (error) {
+      console.error('❌ Failed to send prescription update to patient:', error);
+    }
   };
 
   const PatientQueue = () => (
@@ -469,7 +635,10 @@ const DoctorDashboard = () => {
                   <Video className="h-4 w-4" />
                   <span>Start Consultation</span>
                 </button>
-                <button className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg flex items-center space-x-2 transition-colors text-sm">
+                <button 
+                  onClick={() => handleCallPatient(patient)}
+                  className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg flex items-center space-x-2 transition-colors text-sm"
+                >
                   <Phone className="h-4 w-4" />
                   <span>Call</span>
                 </button>
@@ -666,10 +835,36 @@ const DoctorDashboard = () => {
   );
 
   const tabs = [
-    { id: 'queue', label: 'Patient Queue', icon: <Users className="h-4 w-4" /> },
-    { id: 'consultations', label: 'Consultations', icon: <Video className="h-4 w-4" /> },
-    { id: 'prescriptions', label: 'Prescriptions', icon: <FileText className="h-4 w-4" /> },
-    { id: 'analytics', label: 'Analytics', icon: <Activity className="h-4 w-4" /> }
+    { 
+      id: 'ai-queue', 
+      label: 'AI Analysis Queue', 
+      icon: <Heart className="h-4 w-4" />,
+      tooltip: 'Patients who used AI symptom checker with automated analysis'
+    },
+    { 
+      id: 'queue', 
+      label: 'Appointment Queue', 
+      icon: <Users className="h-4 w-4" />,
+      tooltip: 'Regular appointment-based patients without AI pre-analysis'
+    },
+    { 
+      id: 'consultations', 
+      label: 'Consultations', 
+      icon: <Video className="h-4 w-4" />,
+      tooltip: 'Recent and ongoing patient consultations'
+    },
+    { 
+      id: 'prescriptions', 
+      label: 'Prescriptions', 
+      icon: <FileText className="h-4 w-4" />,
+      tooltip: 'Prescription management and medicine database'
+    },
+    { 
+      id: 'analytics', 
+      label: 'Analytics', 
+      icon: <Activity className="h-4 w-4" />,
+      tooltip: 'Dashboard analytics and reports'
+    }
   ];
 
   return (
@@ -700,11 +895,24 @@ const DoctorDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center">
+            <div className="bg-red-100 p-3 rounded-lg">
+              <Heart className="h-6 w-6 text-red-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">AI Analysis Queue</p>
+              <p className="text-2xl font-bold text-gray-900">3</p>
+              <p className="text-xs text-red-600">1 Emergency</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex items-center">
             <div className="bg-blue-100 p-3 rounded-lg">
               <Users className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Patients in Queue</p>
+              <p className="text-sm font-medium text-gray-600">Appointment Queue</p>
               <p className="text-2xl font-bold text-gray-900">{patientQueue.length}</p>
             </div>
           </div>
@@ -754,6 +962,7 @@ const DoctorDashboard = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
+              title={tab.tooltip}
               className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === tab.id
                   ? 'border-blue-500 text-blue-600'
@@ -767,8 +976,61 @@ const DoctorDashboard = () => {
         </nav>
       </div>
 
+      {/* Tab Description */}
+      {activeTab === 'ai-queue' && (
+        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <Heart className="h-5 w-5 text-blue-400" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-blue-700">
+                <strong>AI Analysis Queue:</strong> Patients who used the AI symptom checker. 
+                Each patient has pre-analyzed symptoms, severity scores, emergency detection, 
+                and AI-recommended treatment plans to assist your diagnosis.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {activeTab === 'queue' && (
+        <div className="bg-gray-50 border-l-4 border-gray-400 p-4 mb-6">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <Users className="h-5 w-5 text-gray-400" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-gray-700">
+                <strong>Appointment Queue:</strong> Traditional appointment-based patients. 
+                These patients booked regular consultations and require standard examination 
+                and diagnosis without AI pre-analysis.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Tab Content */}
       <div>
+        {activeTab === 'ai-queue' && (
+          <EnhancedDoctorDashboard 
+            onStartConsultation={handleStartConsultation}
+            onCreatePrescription={(patient) => {
+              setSelectedPatient(patient);
+              setEditingPrescription(null);
+              setPrescriptionForm({
+                patientId: '',
+                diagnosis: '',
+                medicines: [],
+                instructions: '',
+                followUp: ''
+              });
+              setShowPrescriptionModal(true);
+            }}
+            isOnline={isOnline}
+          />
+        )}
         {activeTab === 'queue' && <PatientQueue />}
         {activeTab === 'consultations' && <Consultations />}
         {activeTab === 'prescriptions' && <Prescriptions />}
