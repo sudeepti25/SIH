@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../contexts/LanguageContext';
 import { 
   Stethoscope, 
   Phone, 
@@ -11,7 +12,8 @@ import {
 } from 'lucide-react';
 
 const Footer = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { currentLanguage } = useLanguage();
 
   return (
     <footer className="bg-gray-900 text-white">
@@ -23,20 +25,19 @@ const Footer = () => {
               <div className="bg-primary-600 p-2 rounded-lg">
                 <Stethoscope className="h-6 w-6 text-white" />
               </div>
-              <span className="text-xl font-bold">Rural Telemedicine</span>
+              <span className="text-xl font-bold">{t('appName')}</span>
             </div>
             <p className="text-gray-300 mb-6 max-w-md">
-              Bringing quality healthcare to rural communities through technology. 
-              Accessible, affordable, and reliable telemedicine services for everyone.
+              {t('appDescription')}
             </p>
             <div className="flex space-x-4">
               <div className="flex items-center space-x-2 text-sm text-gray-300">
                 <Shield className="h-4 w-4" />
-                <span>Secure & Private</span>
+                <span>{t('securePrivate')}</span>
               </div>
               <div className="flex items-center space-x-2 text-sm text-gray-300">
                 <Users className="h-4 w-4" />
-                <span>Multilingual Support</span>
+                <span>{t('multilingualSupport')}</span>
               </div>
             </div>
           </div>
@@ -92,11 +93,11 @@ const Footer = () => {
         <div className="border-t border-gray-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 text-gray-400 text-sm mb-4 md:mb-0">
-              <Heart className="h-4 w-4 text-red-500" />
-              <span>Made with care for rural communities</span>
+            
+              <span>{t('madeWithCare')}</span>
             </div>
             <div className="text-gray-400 text-sm">
-              © 2024 Rural Telemedicine. All rights reserved.
+              © 2025 {t('appName')}. {t('allRightsReserved')}.
             </div>
           </div>
         </div>

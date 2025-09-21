@@ -23,65 +23,65 @@ const HomePage = () => {
     {
       icon: <Stethoscope className="h-8 w-8" />,
       title: t('symptomChecker'),
-      description: "AI-powered symptom analysis to help you understand your health concerns",
+      description: t('symptomCheckerDesc'),
       color: "text-blue-600"
     },
     {
       icon: <Video className="h-8 w-8" />,
       title: t('videoConsultation'),
-      description: "Connect with qualified doctors through secure video consultations",
+      description: t('videoConsultationDesc'),
       color: "text-green-600"
     },
     {
       icon: <Pill className="h-8 w-8" />,
       title: t('medicineAvailability'),
-      description: "Check medicine availability at nearby pharmacies in real-time",
+      description: t('medicineAvailabilityDesc'),
       color: "text-purple-600"
     },
     {
       icon: <FileText className="h-8 w-8" />,
       title: t('healthRecords'),
-      description: "Digital health records accessible anytime, anywhere",
+      description: t('healthRecordsDesc'),
       color: "text-orange-600"
     }
   ];
 
   const userTypes = [
     {
-      title: "Patient",
-      description: "Access healthcare services, book appointments, and manage your health",
+      title: t('patient'),
+      description: t('patientDesc'),
       icon: <Users className="h-12 w-12 text-primary-600" />,
       link: "/patient",
-      features: ["Symptom Checker", "Video Consultation", "Health Records", "Medicine Tracking"]
+      features: [t('symptomChecker'), t('videoConsultation'), t('healthRecords'), "Medicine Tracking"]
     },
     {
-      title: "Doctor",
-      description: "Manage patient consultations and provide remote healthcare",
+      title: t('doctor'),
+      description: t('doctorDesc'),
       icon: <Stethoscope className="h-12 w-12 text-green-600" />,
       link: "/doctor",
-      features: ["Patient Queue", "Video Calls", "Prescriptions", "Case History"]
+      features: [t('patientQueue'), "Video Calls", t('prescriptions'), "Case History"]
     },
     {
-      title: "Pharmacy",
-      description: "Manage inventory and fulfill prescriptions for patients",
+      title: t('pharmacy'),
+      description: t('pharmacyDesc'),
       icon: <Pill className="h-12 w-12 text-purple-600" />,
       link: "/pharmacy",
-      features: ["Inventory Management", "Prescription Fulfillment", "Stock Updates", "Notifications"]
+      features: ["Inventory Management", "Prescription Fulfillment", "Stock Updates", t('notifications')]
     },
     {
-      title: "Admin",
-      description: "Monitor system usage and manage healthcare resources",
+      title: t('admin'),
+      description: t('adminDesc'),
       icon: <Shield className="h-12 w-12 text-red-600" />,
       link: "/admin",
-      features: ["Analytics Dashboard", "User Management", "Reports", "System Settings"]
+      features: [t('analytics') + " Dashboard", "User Management", t('reports'), t('systemSettings')]
     }
   ];
 
   const stats = [
-    { number: "10,000+", label: "Patients Served" },
-    { number: "500+", label: "Doctors Available" },
-    { number: "50+", label: "Villages Covered" },
-    { number: "99%", label: "Satisfaction Rate" }
+    { number: "10,000+", label: t('patientsServed') },
+    { number: "500+", label: t('doctorsAvailable') },
+    { number: "50+", label: t('villagesCovered') },
+    { number: "99%", label: t('satisfactionRate') }
   ];
 
   return (
@@ -94,16 +94,15 @@ const HomePage = () => {
               {t('welcome')}
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              Bringing quality healthcare to rural communities through technology. 
-              Accessible, affordable, and reliable telemedicine services for everyone.
+              {t('heroDescription')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/login" className="btn-primary text-lg px-8 py-4">
-                Get Started
+                {t('getStarted')}
                 <ArrowRight className="ml-2 h-5 w-5 inline" />
               </Link>
               <Link to="/patient" className="btn-secondary text-lg px-8 py-4">
-                Try Symptom Checker
+                {t('trySymptomChecker')}
               </Link>
             </div>
           </div>
@@ -131,10 +130,10 @@ const HomePage = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Key Features
+              {t('keyFeatures')}
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Comprehensive healthcare solutions designed for rural communities
+              {t('keyFeaturesDesc')}
             </p>
           </div>
           
@@ -161,10 +160,10 @@ const HomePage = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Choose Your Role
+              {t('chooseYourRole')}
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Access tailored features based on your role in the healthcare ecosystem
+              {t('chooseYourRoleDesc')}
             </p>
           </div>
           
@@ -196,7 +195,7 @@ const HomePage = () => {
                   to={userType.link}
                   className="w-full btn-primary group-hover:bg-primary-700 transition-colors"
                 >
-                  Access Dashboard
+                  {t('accessDashboard')}
                   <ArrowRight className="ml-2 h-4 w-4 inline" />
                 </Link>
               </div>
@@ -210,7 +209,7 @@ const HomePage = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-8">
-              Why Choose Rural Telemedicine?
+              {t('whyChooseUs')}
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
@@ -218,9 +217,9 @@ const HomePage = () => {
                 <div className="bg-white bg-opacity-20 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                   <Globe className="h-8 w-8" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">Multilingual Support</h3>
+                <h3 className="text-xl font-semibold mb-2">{t('multilingualSupportTitle')}</h3>
                 <p className="text-primary-100">
-                  Available in Hindi, Punjabi, and English for better accessibility
+                  {t('multilingualSupportDesc')}
                 </p>
               </div>
               
@@ -228,9 +227,9 @@ const HomePage = () => {
                 <div className="bg-white bg-opacity-20 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                   <Smartphone className="h-8 w-8" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">Mobile-First Design</h3>
+                <h3 className="text-xl font-semibold mb-2">{t('mobileFirstTitle')}</h3>
                 <p className="text-primary-100">
-                  Optimized for smartphones with offline capabilities
+                  {t('mobileFirstDesc')}
                 </p>
               </div>
               
@@ -238,19 +237,19 @@ const HomePage = () => {
                 <div className="bg-white bg-opacity-20 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                   <Heart className="h-8 w-8" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">Community Focused</h3>
+                <h3 className="text-xl font-semibold mb-2">{t('communityFocusedTitle')}</h3>
                 <p className="text-primary-100">
-                  Designed specifically for rural healthcare needs
+                  {t('communityFocusedDesc')}
                 </p>
               </div>
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/login" className="bg-white text-primary-600 hover:bg-gray-100 font-medium py-3 px-8 rounded-lg transition-colors">
-                Start Your Journey
+                {t('startYourJourney')}
               </Link>
               <Link to="/emergency" className="border-2 border-white text-white hover:bg-white hover:text-primary-600 font-medium py-3 px-8 rounded-lg transition-colors">
-                Emergency Help
+                {t('emergencyHelp')}
               </Link>
             </div>
           </div>
@@ -262,10 +261,10 @@ const HomePage = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              What Our Users Say
+              {t('whatUsersSay')}
             </h2>
             <p className="text-xl text-gray-600">
-              Real stories from our community
+              {t('realStories')}
             </p>
           </div>
           
@@ -278,16 +277,15 @@ const HomePage = () => {
                   ))}
                 </div>
                 <p className="text-gray-600 mb-4">
-                  "This app has been a lifesaver for our village. We can now consult with doctors 
-                  without traveling long distances. The multilingual support makes it easy for everyone to use."
+                  "{t('testimonialText')}"
                 </p>
                 <div className="flex items-center">
                   <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center mr-3">
                     <Users className="h-5 w-5 text-primary-600" />
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900">Village Resident</div>
-                    <div className="text-sm text-gray-500">Nabha, Punjab</div>
+                    <div className="font-semibold text-gray-900">{t('villageResident')}</div>
+                    <div className="text-sm text-gray-500">{t('location')}</div>
                   </div>
                 </div>
               </div>

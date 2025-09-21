@@ -1,4 +1,4 @@
-# Rural Telemedicine Healthcare Solution
+# Sahayata Healthcare Solution
 
 A comprehensive Progressive Web App (PWA) designed to provide accessible digital healthcare services to rural communities. Built with React, Vite, and Tailwind CSS, this application supports multiple user types and includes multilingual support.
 
@@ -51,7 +51,7 @@ A comprehensive Progressive Web App (PWA) designed to provide accessible digital
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd rural-telemedicine
+   cd sahayata
    ```
 
 2. **Install dependencies**
@@ -78,7 +78,7 @@ The built files will be in the `dist` directory, ready for deployment.
 ## 🏗️ Project Structure
 
 ```
-rural-telemedicine/
+sahayata/
 ├── public/
 │   ├── manifest.json          # PWA manifest
 │   └── sw.js                  # Service worker
@@ -156,7 +156,7 @@ Language switching is available in the header and persists across sessions.
 Create a `.env` file in the root directory:
 
 ```env
-VITE_APP_NAME=Rural Telemedicine
+VITE_APP_NAME=Sahayata
 VITE_APP_VERSION=1.0.0
 VITE_API_BASE_URL=http://localhost:3000/api
 ```
