@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import i18n from '../utils/i18n'; // Import i18n directly
 
 const LanguageContext = createContext();
 
@@ -12,28 +13,45 @@ export const useLanguage = () => {
 };
 
 export const LanguageProvider = ({ children }) => {
-  const { i18n } = useTranslation();
   const [currentLanguage, setCurrentLanguage] = useState('en');
+  const [isReady, setIsReady] = useState(false);
 
-  const changeLanguage = useCallback((language) => {
-    i18n.changeLanguage(language).then(() => {
+  const changeLanguage = useCallback(async (language) => {
+    try {
+      await i18n.changeLanguage(language);
       setCurrentLanguage(language);
       localStorage.setItem('selectedLanguage', language);
-    }).catch((error) => {
+    } catch (error) {
       console.error('Language change failed:', error);
-    });
-  }, [i18n]);
+    }
+  }, []);
 
-  // Load saved language on mount
-  React.useEffect(() => {
-    const savedLanguage = localStorage.getItem('selectedLanguage') || 'en';
-    changeLanguage(savedLanguage);
-  }, [changeLanguage]);
+  // Initialize language on mount
+  useEffect(() => {
+    const initLanguage = async () => {
+      const savedLanguage = localStorage.getItem('selectedLanguage') || 'en';
+      
+      if (savedLanguage !== 'en') {
+        await i18n.changeLanguage(savedLanguage);
+      }
+      
+      setCurrentLanguage(savedLanguage);
+      setIsReady(true);
+    };
+    
+    initLanguage();
+  }, []);
 
   const value = {
     currentLanguage,
     changeLanguage,
+    isReady
   };
+
+  // Don't render children until i18n is ready
+  if (!isReady) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <LanguageContext.Provider value={value}>
