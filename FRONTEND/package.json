@@ -1,5 +1,5 @@
 {
-  "name": "rural-telemedicine",
+  "name": "sahayata",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "axios": "^1.6.0",
     "framer-motion": "^12.23.12",
     "i18next": "^25.5.2",
     "lucide-react": "^0.544.0",

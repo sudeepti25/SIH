@@ -54,7 +54,7 @@ const Header = () => {
               <Stethoscope className="h-6 w-6 text-white" />
             </div>
             <span className="text-xl font-bold text-sterile-900">
-              Rural Telemedicine
+              {t('appName')}
             </span>
           </Link>
 

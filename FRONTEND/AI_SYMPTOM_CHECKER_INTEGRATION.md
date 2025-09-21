@@ -2,7 +2,7 @@
 
 ## Overview
 
-This documentation describes the integration between the AI symptom checker backend and frontend components for the Rural Telemedicine Platform.
+This documentation describes the integration between the AI symptom checker backend and frontend components for the Sahayata Platform.
 
 ## Backend API Endpoints
 
@@ -163,7 +163,7 @@ User Input → SymptomChecker → API Call → Gemini AI → Analysis Result →
 ```env
 VITE_API_BASE_URL=http://localhost:5000/api
 VITE_NODE_ENV=development
-VITE_APP_NAME=Rural Telemedicine Platform
+VITE_APP_NAME=Sahayata Platform
 ```
 
 ### Backend (.env)
