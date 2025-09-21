@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: telemed_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: telemed
+
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./BACKEND/init-db:/docker-entrypoint-initdb.d:ro
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - telemed-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: telemed_redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - telemed-network
+
+  app:
+    build:
+      context: ./BACKEND
+      dockerfile: Dockerfile.dev
+    container_name: telemed_app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/telemed
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=a2393f214fc0b26879054568be3d91d7
+      - JWT_EXPIRES_IN=7d
+      - OTP_EXPIRY_MINUTES=5
+      - MAX_OTP_ATTEMPTS=3
+      - RATE_LIMIT_WINDOW_MS=900000
+      - RATE_LIMIT_MAX_REQUESTS=100
+      - ENABLE_SMS=false
+      # Twilio Settings (fill these when ready)
+      - TWILIO_ACCOUNT_SID=AC3e3cdd90adb1f7787d504c01f5aaae4e
+      - TWILIO_AUTH_TOKEN=d9df4075c29431f6527f5be0532d83c9
+      - TWILIO_PHONE_NUMBER=+919599772563
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./BACKEND:/BACKEND
+      - /BACKEND/node_modules  # Prevent overwriting node_modules
+    restart: unless-stopped
+    networks:
+      - telemed-network
+
+volumes:
+  pgdata:
+  redis_data:
+
+networks:
+  telemed-network:
+    driver: bridge
