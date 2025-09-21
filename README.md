@@ -1,4 +1,4 @@
-<img width="1908" height="609" alt="image" src="https://github.com/user-attachments/assets/204c85dc-9666-4985-8624-a9960efdd020" />Problem Statement Title Telemedicine Access for Rural Healthcare in Nabha:
+Problem Statement Title Telemedicine Access for Rural Healthcare in Nabha:
 
 Problem Description Nabha and its surrounding rural areas face significant healthcare challenges. The local Civil Hospital operates at less than 50% staff capacity, with only 11 doctors for 23 sanctioned posts. Patients from 173 villages travel long distances, often missing work, only to find that specialists are unavailable or medicines are out of stock. Poor road conditions and sanitation further hinder access. Many residents lack timely medical care, leading to worsened health outcomes and increased financial strain.
 
@@ -26,10 +26,16 @@ Multilingual & Inclusive Support – Hindi, Punjabi, English, plus voice-to-text
 
 Community Access Points – Anganwadi centers equipped with PCs for patients without smartphones.
 
-<img width="1908" height="609" alt="image" src="https://github.com/user-attachments/assets/88b4a56b-6010-4764-9021-9344f7851908" />
+<img width="1908" height="600" alt="image" src="https://github.com/user-attachments/assets/88b4a56b-6010-4764-9021-9344f7851908" />
 
-<img width="1869" height="867" alt="image" src="https://github.com/user-attachments/assets/4d660ef0-36ee-4106-b657-5c65e242b7b7" />
 
-<img width="1856" height="854" alt="image" src="https://github.com/user-attachments/assets/361a66ef-a189-4135-bc4e-6bd6637416db" />
+Multilingual support :
+
+<img width="1869" height="800" alt="image" src="https://github.com/user-attachments/assets/4d660ef0-36ee-4106-b657-5c65e242b7b7" />
+
+
+Doctor Dashboard:
+
+<img width="1856" height="800" alt="image" src="https://github.com/user-attachments/assets/361a66ef-a189-4135-bc4e-6bd6637416db" />
 
 
